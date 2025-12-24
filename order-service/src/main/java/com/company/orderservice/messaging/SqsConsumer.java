@@ -26,7 +26,8 @@ public class SqsConsumer {
     @Retryable(
             retryFor = {Exception.class},
             maxAttempts = 2,
-            backoff = @Backoff(delay = 1000)
+            backoff = @Backoff(delay = 1000),
+            noRetryFor = {InvalidOrderStateTransitionException.class, OrderNotFoundException.class}
     )
     public void listen(String payload) throws JsonProcessingException {
         try {

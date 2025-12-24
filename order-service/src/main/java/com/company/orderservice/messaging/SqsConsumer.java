@@ -1,6 +1,8 @@
 package com.company.orderservice.messaging;
 
 import com.company.orderservice.dto.OrderEvent;
+import com.company.orderservice.exception.InvalidOrderStateTransitionException;
+import com.company.orderservice.exception.OrderNotFoundException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.company.orderservice.enums.OrderStatusEnum;
@@ -35,6 +37,8 @@ public class SqsConsumer {
             } else if ("INVENTORY_RESERVED".equals(event.getEventType())) {
                 orderService.updateOrderStatus(event.getOrderId(), OrderStatusEnum.CONFIRMED);
             }
+        } catch (InvalidOrderStateTransitionException | OrderNotFoundException e) {
+            log.error(e.getMessage());
         } catch (Exception e) {
             log.error("Error processing message: {}", e.getMessage());
             throw e;

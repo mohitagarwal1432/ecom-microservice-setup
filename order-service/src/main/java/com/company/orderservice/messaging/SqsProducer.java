@@ -6,6 +6,8 @@ import io.awspring.cloud.sqs.operations.SqsTemplate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -19,6 +21,11 @@ public class SqsProducer {
     @Value("${sqs.queue.order-events}")
     private String orderEventsQueue;
 
+    @Retryable(
+            retryFor = { RuntimeException.class },
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 1000, multiplier = 2)
+    )
     public void publishOrderEvent(OrderEvent event) {
         log.info("Publishing OrderEvent to SQS: {}", event.getOrderId());
         try {

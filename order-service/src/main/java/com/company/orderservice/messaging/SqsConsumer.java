@@ -23,12 +23,6 @@ public class SqsConsumer {
     private final ObjectMapper objectMapper;
 
     @SqsListener("${sqs.queue.inventory-events}")
-    @Retryable(
-            retryFor = {Exception.class},
-            maxAttempts = 2,
-            backoff = @Backoff(delay = 1000),
-            noRetryFor = {InvalidOrderStateTransitionException.class, OrderNotFoundException.class}
-    )
     public void listen(String payload) throws JsonProcessingException {
         try {
             OrderEvent event = objectMapper.readValue(payload, OrderEvent.class);

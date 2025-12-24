@@ -9,13 +9,9 @@ import com.company.inventoryservice.service.ProductService;
 import io.awspring.cloud.sqs.annotation.SqsListener;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-
-import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @Slf4j
@@ -27,13 +23,6 @@ public class SqsConsumer {
     private final ObjectMapper objectMapper;
 
     @SqsListener("${sqs.queue.order-events}")
-    @Transactional
-    @Retryable(
-            retryFor = {Exception.class},
-            maxAttempts = 2,
-            backoff = @Backoff(delay = 1000),
-            noRetryFor = {InsufficientInventoryException.class, ProductNotFoundException.class}
-    )
     public void listen(String payload) throws JsonProcessingException {
         OrderEvent event = objectMapper.readValue(payload, OrderEvent.class);
         log.info("Received OrderEvent: {}", event);
@@ -72,7 +61,6 @@ public class SqsConsumer {
                         .build();
 
                 sqsProducer.publishOrderEvent(failedEvent);
-
             } catch (Exception e) {
                 log.error("Failed to process order event: {}. Reason: {}", event.getOrderId(), e.getMessage());
                 throw e;
